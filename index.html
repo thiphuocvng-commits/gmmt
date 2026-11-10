@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 GIẢI MÃ MẬT MÃ — HÓA 10</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- KaTeX CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <!-- Mammoth JS for Docx parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    
+    <style>
+        :root {
+            --theme-color: #f5c542;
+            --theme-color-hover: #e0b030;
+            --theme-color-light: #fef9c3;
+        }
+
+        /* Fallback Basic Styling if Tailwind CDN fails in in-app webviews */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f0f4f8;
+            color: #1e293b;
+            margin: 0;
+            padding: 12px;
+        }
+
+        .katex-render {
+            white-space: nowrap !important;
+            display: inline-block;
+        }
+        .katex-html {
+            display: inline-block !important;
+        }
+
+        .bg-theme { background-color: var(--theme-color) !important; }
+        .border-theme { border-color: var(--theme-color) !important; }
+        .text-theme { color: var(--theme-color) !important; }
+
+        .char-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 3px;
+        }
+        .char-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            user-select: none;
+            transition: all 0.15s ease;
+            border-radius: 4px;
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        
+        .block-locked {
+            opacity: 0.4;
+            pointer-events: none;
+            filter: grayscale(80%);
+        }
+
+        .block-unlocked .char-cell {
+            cursor: pointer;
+            background-color: #ffffff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+
+        .block-unlocked .char-cell:hover {
+            background-color: #e2e8f0;
+            transform: scale(1.05);
+        }
+
+        .block-unlocked .char-cell.cell-found {
+            background-color: var(--theme-color) !important;
+            color: #0f172a !important;
+            font-weight: 900;
+            box-shadow: inset 0 0 4px rgba(0,0,0,0.2);
+            border-color: rgba(0,0,0,0.1);
+        }
+
+        .border-accent-0 { border-top-color: #ef4444; }
+        .border-accent-1 { border-top-color: #f97316; }
+        .border-accent-2 { border-top-color: #eab308; }
+        .border-accent-3 { border-top-color: #22c55e; }
+        .border-accent-4 { border-top-color: #06b6d4; }
+        .border-accent-5 { border-top-color: #3b82f6; }
+        .border-accent-6 { border-top-color: #6366f1; }
+        .border-accent-7 { border-top-color: #a855f7; }
+
+        @media print {
+            @page {
+                size: A3 landscape;
+                margin: 8mm;
+            }
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 11px !important;
+                padding: 0 !important;
+            }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .print-container {
+                width: 100% !important;
+                max-width: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .print-questions-grid {
+                display: grid !important;
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+            }
+            .print-blocks-row {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                justify-content: space-between !important;
+                gap: 6px !important;
+                margin-top: 10px !important;
+            }
+            .print-block-item {
+                flex: 1 1 0% !important;
+                min-width: 0 !important;
+            }
+            .char-cell {
+                font-size: 10px !important;
+                border: 1px solid #94a3b8 !important;
+            }
+            .header-gradient {
+                background: none !important;
+                color: #000 !important;
+                border-bottom: 2px solid #000 !important;
+                padding: 4px 0 !important;
+            }
+            .card-box {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+                background: #fff !important;
+                padding: 6px !important;
+            }
+        }
+    </style>
+</head>
+<body class="p-2 md:p-6 text-slate-800">
+
+    <!-- Zalo/In-app browser warning alert -->
+    <div id="browser-warning" class="hidden no-print bg-amber-500 text-white p-3 text-center text-xs md:text-sm font-bold shadow-md rounded-xl mb-4">
+        ⚠️ Bạn đang mở bài trong Zalo/Messenger! Vui lòng bấm vào nút chia sẻ 🌐 ở góc màn hình và chọn <strong>"Mở bằng Safari"</strong> hoặc <strong>"Mở bằng Chrome"</strong> để trải nghiệm đầy đủ giao diện và trò chơi!
+    </div>
+
+    <div id="app" class="max-w-7xl mx-auto print-container space-y-4">
+
+        <!-- HEADER SECTION -->
+        <header class="header-gradient bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 text-white rounded-2xl p-4 md:p-6 shadow-xl border-b-4 border-amber-400">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="text-center md:text-left">
+                    <h1 id="title-display" class="text-2xl md:text-4xl font-extrabold tracking-tight text-amber-300">
+                        🔐 GIẢI MÃ MẬT MÃ — HÓA 10
+                    </h1>
+                    <p id="subtitle-display" class="text-indigo-200 text-sm md:text-base font-medium mt-1">
+                        Chủ đề: Sulfuric acid và muối sulfate
+                    </p>
+                </div>
+                
+                <!-- Student Info Inputs -->
+                <div class="flex flex-wrap gap-3 w-full md:w-auto justify-center">
+                    <div class="bg-white/10 backdrop-blur-md px-3 py-2 rounded-xl border border-white/20 flex items-center gap-2">
+                        <label class="text-xs text-amber-200 font-bold uppercase">Họ tên:</label>
+                        <input type="text" id="student-name" placeholder="Nhập họ tên..." class="bg-white text-slate-900 font-semibold text-sm px-2 py-1 rounded outline-none w-40 md:w-48">
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-md px-3 py-2 rounded-xl border border-white/20 flex items-center gap-2">
+                        <label class="text-xs text-amber-200 font-bold uppercase">Lớp:</label>
+                        <input type="text" id="student-class" placeholder="Nhập lớp..." class="bg-white text-slate-900 font-semibold text-sm px-2 py-1 rounded outline-none w-20 md:w-24">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- INSTRUCTIONS BOX -->
+        <div class="no-print bg-amber-50 border-l-4 border-amber-500 rounded-r-xl p-3 md:p-4 text-xs md:text-sm text-amber-900 shadow-sm flex flex-col sm:flex-row gap-2 justify-between items-start sm:items-center">
+            <div class="flex items-center gap-2 font-semibold">
+                <span class="text-lg">💡</span> HƯỚNG DẪN BÀI LÀM:
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full sm:w-auto">
+                <div class="bg-white/80 p-2 rounded border border-amber-200">1. Trả lời đúng câu hỏi để mở khối chữ tương ứng.</div>
+                <div class="bg-white/80 p-2 rounded border border-amber-200">2. Bấm tìm tất cả các chữ cái giải mã nằm trên nét số.</div>
+                <div class="bg-white/80 p-2 rounded border border-amber-200">3. Tìm đủ các khối để khám phá ra Mật mã bí mật!</div>
+            </div>
+        </div>
+
+        <!-- PASSWORD TRACKER BAR -->
+        <div class="bg-white rounded-2xl p-4 shadow-md border border-slate-200 text-center">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Dãy Mật Mã Cần Giải Mã</h2>
+            <div id="passcode-tracker" class="flex justify-center items-center gap-2 md:gap-4 flex-wrap">
+                <!-- Dynamically filled slots -->
+            </div>
+        </div>
+
+        <!-- WINNER BANNER (HIDDEN UNTIL ALL COMPLETED) -->
+        <div id="win-banner" class="hidden bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-700 text-white rounded-2xl p-6 shadow-2xl text-center transform transition-all duration-500 scale-95 border-4 border-amber-300">
+            <div class="text-4xl md:text-5xl mb-2">🎉 🎉 🎉</div>
+            <h2 class="text-2xl md:text-4xl font-extrabold mb-1">XIN CHÚC MỪNG! BẠN ĐÃ GIẢI MÃ THÀNH CÔNG!</h2>
+            <p class="text-emerald-100 text-sm md:text-lg mb-4">Dãy mật mã đặc biệt của phiếu học tập là:</p>
+            <div id="win-passcode-display" class="inline-block bg-white text-slate-900 font-black text-3xl md:text-5xl px-8 py-3 rounded-2xl shadow-inner border-2 border-amber-400 tracking-wider">
+                -- -- ----
+            </div>
+            <p class="text-xs md:text-sm text-emerald-200 mt-4 italic">Hãy chụp màn hình hoặc nộp bài để giáo viên ghi nhận kết quả!</p>
+        </div>
+
+        <!-- MAIN CONTENT LAYOUT -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- PART A: QUESTIONS -->
+            <div class="lg:col-span-7 space-y-4">
+                <div class="flex items-center justify-between bg-slate-800 text-white px-4 py-2 rounded-xl">
+                    <h2 class="font-bold text-sm md:text-base flex items-center gap-2">
+                        <span>📝</span> PHẦN A: CÂU HỎI TRẮC NGHIỆM
+                    </h2>
+                    <span id="question-count-badge" class="text-xs bg-indigo-500 px-2 py-1 rounded-full font-semibold">8 câu</span>
+                </div>
+
+                <div id="questions-container" class="space-y-4 print-questions-grid">
+                    <!-- Dynamic Questions -->
+                </div>
+            </div>
+
+            <!-- PART B: CHARACTER BLOCKS -->
+            <div class="lg:col-span-5 space-y-4">
+                <div class="flex items-center justify-between bg-slate-800 text-white px-4 py-2 rounded-xl">
+                    <h2 class="font-bold text-sm md:text-base flex items-center gap-2">
+                        <span>🧩</span> PHẦN B: KHỐI CHỮ GIẢI MÃ
+                    </h2>
+                    <span class="text-xs text-slate-300">Nhấp ô chứa chữ giải mã</span>
+                </div>
+
+                <div id="blocks-container" class="grid grid-cols-2 gap-3 print-blocks-row">
+                    <!-- Dynamic Matrix Blocks -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ACTION BUTTON BAR -->
+        <div class="no-print bg-white p-4 rounded-2xl shadow-lg border border-slate-200 flex flex-wrap justify-center items-center gap-3">
+            <button onclick="submitQuiz()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition hover:-translate-y-0.5 flex items-center gap-2">
+                <span>✅</span> Nộp Bài
+            </button>
+            <button onclick="resetQuizState()" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-6 py-3 rounded-xl shadow-md transition hover:-translate-y-0.5 flex items-center gap-2">
+                <span>🔄</span> Làm Lại
+            </button>
+            <button onclick="printA3Sheet()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition hover:-translate-y-0.5 flex items-center gap-2">
+                <span>🖨️</span> In Phiếu (A3)
+            </button>
+            <button id="btn-editor-toggle" onclick="toggleTeacherPanel()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-6 py-3 rounded-xl shadow-md transition hover:-translate-y-0.5 flex items-center gap-2">
+                <span>⚙️</span> Soạn Đề (Giáo viên)
+            </button>
+        </div>
+
+        <!-- RESULT SCORE BOARD (AFTER SUBMIT) -->
+        <div id="result-board" class="hidden bg-white rounded-2xl p-6 shadow-xl border-2 border-indigo-200 space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-center border-b pb-4 gap-4">
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-800">📊 KẾT QUẢ BÀI LÀM</h3>
+                    <p id="result-student-info" class="text-sm text-slate-500"></p>
+                </div>
+                <div class="text-center sm:text-right bg-indigo-50 px-6 py-3 rounded-2xl border border-indigo-100">
+                    <span class="text-xs uppercase font-bold text-indigo-500 block">Điểm số đạt được</span>
+                    <span id="final-score" class="text-4xl font-black text-indigo-700">0.0 / 10</span>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="font-bold text-slate-700 mb-2">Chi tiết các câu trả lời sai / chưa hoàn thành:</h4>
+                <div id="wrong-answers-list" class="space-y-3">
+                    <!-- Wrong items list -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TEACHER EDITOR PANEL -->
+        <div id="teacher-panel" class="hidden no-print bg-slate-900 text-slate-100 p-6 rounded-2xl shadow-2xl space-y-6 border-2 border-purple-500 mt-6">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-4">
+                <h2 class="text-xl font-extrabold text-purple-400 flex items-center gap-2">
+                    🛠️ BẢNG SOẠN ĐỀ VÀ CÀI ĐẶT (DÀNH CHO GIÁO VIÊN)
+                </h2>
+                <button onclick="toggleTeacherPanel()" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
+            </div>
+
+            <!-- Header config & Color theme -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-800 p-4 rounded-xl">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Tiêu đề phiếu:</label>
+                    <input type="text" id="edit-sheet-title" class="w-full bg-slate-700 text-white px-3 py-2 rounded border border-slate-600 focus:outline-none focus:border-purple-400" placeholder="🔐 GIẢI MÃ MẬT MÃ — HÓA 10">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Chủ đề bài học:</label>
+                    <input type="text" id="edit-sheet-subtitle" class="w-full bg-slate-700 text-white px-3 py-2 rounded border border-slate-600 focus:outline-none focus:border-purple-400" placeholder="Sulfuric acid và muối sulfate">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-2">Màu tô khối chữ (Highlight):</label>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <input type="color" id="edit-theme-color" value="#f5c542" onchange="setThemeColor(this.value)" class="w-10 h-10 rounded cursor-pointer bg-transparent border-0">
+                        <div class="flex gap-2">
+                            <button onclick="setThemeColor('#f5c542')" class="w-8 h-8 rounded-full border-2 border-white shadow" style="background:#f5c542" title="Vàng"></button>
+                            <button onclick="setThemeColor('#22c55e')" class="w-8 h-8 rounded-full border-2 border-white shadow" style="background:#22c55e" title="Xanh lá"></button>
+                            <button onclick="setThemeColor('#ec4899')" class="w-8 h-8 rounded-full border-2 border-white shadow" style="background:#ec4899" title="Hồng"></button>
+                            <button onclick="setThemeColor('#3b82f6')" class="w-8 h-8 rounded-full border-2 border-white shadow" style="background:#3b82f6" title="Xanh dương"></button>
+                            <button onclick="setThemeColor('#a855f7')" class="w-8 h-8 rounded-full border-2 border-white shadow" style="background:#a855f7" title="Tím"></button>
+                            <button onclick="setThemeColor('#f97316')" class="w-8 h-8 rounded-full border-2 border-white shadow" style="background:#f97316" title="Cam"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Docx & Actions -->
+            <div class="bg-slate-800 p-4 rounded-xl space-y-3">
+                <h3 class="font-bold text-sm text-purple-300">📥 NHẬP ĐỀ TỪ FILE WORD (.DOCX)</h3>
+                <div class="flex flex-wrap items-center gap-3">
+                    <input type="file" id="docx-file-input" accept=".docx" class="hidden" onchange="handleDocxImport(event)">
+                    <button onclick="document.getElementById('docx-file-input').click()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold text-sm">
+                        📄 Chọn File Word (.docx)
+                    </button>
+                    <span class="text-xs text-slate-400">Định dạng câu hỏi: "Câu 1:", "A. ...", "Đáp án: A" ở cuối câu.</span>
+                </div>
+                <div id="docx-status" class="text-xs text-amber-400 font-medium"></div>
+            </div>
+
+            <!-- Dynamic Question Editors -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-purple-300">DANH SÁCH CÂU HỎI CHI TIẾT</h3>
+                    <button onclick="addNewQuestionEditor()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-bold">+ Thêm câu hỏi</button>
+                </div>
+                <div id="editor-questions-list" class="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                    <!-- Dynamic Question Forms -->
+                </div>
+            </div>
+
+            <!-- Save & Export Actions -->
+            <div class="flex flex-wrap justify-between items-center gap-4 border-t border-slate-700 pt-4">
+                <div class="flex gap-2">
+                    <button onclick="saveTeacherData()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2.5 rounded-xl shadow">
+                        💾 Lưu Đề
+                    </button>
+                    <button onclick="restoreDefaultData()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2.5 rounded-xl">
+                        🔄 Khôi Phục Đề Mẫu
+                    </button>
+                </div>
+                <button onclick="exportStudentHTML()" class="bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white font-bold px-6 py-2.5 rounded-xl shadow flex items-center gap-2">
+                    <span>📦</span> Xuất File Cho Học Sinh (.HTML)
+                </button>
+            </div>
+            <div class="text-xs text-slate-400 italic">
+                * Note xuất file: File xuất ra đã nhúng sẵn dữ liệu đề bài, tiêu đề và ẩn panel Soạn đề. Học sinh mở file làm trực tiếp không cần mạng.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MAIN JAVASCRIPT LOGIC -->
+    <script>
+        // Check In-App Browser (Zalo, Messenger)
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+        if (/Zalo|FBAN|FBAV|Instagram/i.test(userAgent)) {
+            const warningEl = document.getElementById('browser-warning');
+            if (warningEl) warningEl.classList.remove('hidden');
+        }
+
+        // Matrix definitions 5x7 for digits 0-9
+        const DIGIT_PATTERNS = {
+            0: [
+                [0,1,1,1,0],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0]
+            ],
+            1: [
+                [0,0,1,0,0],
+                [0,1,1,0,0],
+                [0,0,1,0,0],
+                [0,0,1,0,0],
+                [0,0,1,0,0],
+                [0,0,1,0,0],
+                [0,1,1,1,0]
+            ],
+            2: [
+                [0,1,1,1,0],
+                [1,0,0,0,1],
+                [0,0,0,0,1],
+                [0,0,1,1,0],
+                [0,1,0,0,0],
+                [1,0,0,0,0],
+                [1,1,1,1,1]
+            ],
+            3: [
+                [1,1,1,1,1],
+                [0,0,0,1,0],
+                [0,0,1,0,0],
+                [0,0,0,1,0],
+                [0,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0]
+            ],
+            4: [
+                [0,0,0,1,0],
+                [0,0,1,1,0],
+                [0,1,0,1,0],
+                [1,0,0,1,0],
+                [1,1,1,1,1],
+                [0,0,0,1,0],
+                [0,0,0,1,0]
+            ],
+            5: [
+                [1,1,1,1,1],
+                [1,0,0,0,0],
+                [1,1,1,1,0],
+                [0,0,0,0,1],
+                [0,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0]
+            ],
+            6: [
+                [0,0,1,1,0],
+                [0,1,0,0,0],
+                [1,0,0,0,0],
+                [1,1,1,1,0],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0]
+            ],
+            7: [
+                [1,1,1,1,1],
+                [0,0,0,0,1],
+                [0,0,0,1,0],
+                [0,0,1,0,0],
+                [0,1,0,0,0],
+                [0,1,0,0,0],
+                [0,1,0,0,0]
+            ],
+            8: [
+                [0,1,1,1,0],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,0]
+            ],
+            9: [
+                [0,1,1,1,0],
+                [1,0,0,0,1],
+                [1,0,0,0,1],
+                [0,1,1,1,1],
+                [0,0,0,0,1],
+                [0,0,0,1,0],
+                [0,1,1,0,0]
+            ]
+        };
+
+        // Default Chemistry Question Set
+        const DEFAULT_QUIZ_DATA = {
+            title: "🔐 GIẢI MÃ MẬT MÃ — HÓA 10",
+            subtitle: "Chủ đề: Sulfuric acid và muối sulfate",
+            themeColor: "#f5c542",
+            isStudentFile: false,
+            questions: [
+                {
+                    id: 1,
+                    question: "Dung dịch $H_2SO_4$ đặc nguội không phản ứng (thụ động hóa) với kim loại nào sau đây?",
+                    options: ["A. Cu", "B. Fe", "C. Mg", "D. Zn"],
+                    correct: "B",
+                    targetChar: "B",
+                    digit: 2,
+                    weight: 1,
+                    explanation: "$H_2SO_4$ đặc nguội gây ra hiện tượng thụ động hóa đối với Fe, Al, Cr."
+                },
+                {
+                    id: 2,
+                    question: "Thuốc thử dùng để nhận biết ion $SO_4^{2-}$ trong dung dịch muối sulfate là:",
+                    options: ["A. $BaCl_2$", "B. $NaOH$", "C. $AgNO_3$", "D. $HCl$"],
+                    correct: "A",
+                    targetChar: "A",
+                    digit: 0,
+                    weight: 1,
+                    explanation: "Ion $Ba^{2+}$ phản ứng với $SO_4^{2-}$ tạo kết tủa trắng $BaSO_4$ không tan trong acid."
+                },
+                {
+                    id: 3,
+                    question: "Trong công nghiệp, sulfuric acid được sản xuất bằng phương pháp tiếp xúc trải qua mấy giai đoạn?",
+                    options: ["A. 1 giai đoạn", "B. 2 giai đoạn", "C. 3 giai đoạn", "D. 4 giai đoạn"],
+                    correct: "C",
+                    targetChar: "C",
+                    digit: 1,
+                    weight: 1,
+                    explanation: "3 giai đoạn: (1) Sản xuất $SO_2$, (2) Ôxi hóa $SO_2$ thành $SO_3$, (3) Hấp thụ $SO_3$ bằng $H_2SO_4$ đặc."
+                },
+                {
+                    id: 4,
+                    question: "Khi pha loãng $H_2SO_4$ đặc, cách làm nào sau đây là an toàn?",
+                    options: ["A. Rót nhanh nước vào acid", "B. Rót từ từ acid vào nước", "C. Rót từ từ nước vào acid", "D. Đổ cùng lúc cả hai vào"],
+                    correct: "B",
+                    targetChar: "B",
+                    digit: 1,
+                    weight: 1,
+                    explanation: "Rót từ từ acid vào nước và khuấy nhẹ. Tuyệt đối không rót nước vào acid đặc vì gây bắn acid."
+                },
+                {
+                    id: 5,
+                    question: "Chất nào sau đây vừa có tính acid mạnh vừa có tính oxi hóa mạnh khi ở dạng đậm đặc?",
+                    options: ["A. $HCl$", "B. $H_2SO_4$", "C. $H_2S$", "D. $H_3PO_4$"],
+                    correct: "B",
+                    targetChar: "B",
+                    digit: 2,
+                    weight: 1,
+                    explanation: "$H_2SO_4$ đặc thể hiện tính oxi hóa rất mạnh do nguyên tố S có số oxi hóa cao nhất (+6)."
+                },
+                {
+                    id: 6,
+                    question: "Muối $CaSO_4 \cdot 2H_2O$ được gọi là gì trong thực tế?",
+                    options: ["A. Thạch cao sống", "B. Thạch cao nung", "C. Thạch cao khan", "D. Đá vôi"],
+                    correct: "A",
+                    targetChar: "A",
+                    digit: 0,
+                    weight: 1,
+                    explanation: "Thạch cao sống là $CaSO_4 \cdot 2H_2O$; khi nung thu được thạch cao nung $CaSO_4 \cdot 0.5H_2O$."
+                },
+                {
+                    id: 7,
+                    question: "Khí $SO_2$ thể hiện tính tẩy màu và tính khử. Khí $SO_2$ làm mất màu dung dịch nào sau đây?",
+                    options: ["A. $NaCl$", "B. $Br_2$", "C. $NaOH$", "D. $K_2SO_4$"],
+                    correct: "B",
+                    targetChar: "B",
+                    digit: 2,
+                    weight: 1,
+                    explanation: "$SO_2 + Br_2 + 2H_2O \rightarrow H_2SO_4 + 2HBr$ (Làm mất màu dung dịch Bromine)."
+                },
+                {
+                    id: 8,
+                    question: "Kim loại nào sau đây tác dụng với $H_2SO_4$ loãng giải phóng khí $H_2$?",
+                    options: ["A. Cu", "B. Ag", "C. Fe", "D. Au"],
+                    correct: "C",
+                    targetChar: "C",
+                    digit: 6,
+                    weight: 1,
+                    explanation: "Fe đứng trước H trong dãy hoạt động hóa học nên giải phóng $H_2$. Cu, Ag, Au đứng sau H nên không phản ứng."
+                }
+            ]
+        };
+
+        // App State
+        let currentQuiz = JSON.parse(JSON.stringify(DEFAULT_QUIZ_DATA));
+        let gameState = {
+            answers: {},        // qIndex: 'A'|'B'|'C'|'D'
+            foundCells: {},     // qIndex: Set of found cell indices
+            completedBlocks: {},// qIndex: boolean
+            submitted: false
+        };
+
+        // Load data on startup
+        window.onload = function() {
+            loadSavedQuiz();
+            initGame();
+        };
+
+        function loadSavedQuiz() {
+            const saved = localStorage.getItem('giai_ma_mat_ma_quiz');
+            if (saved) {
+                try {
+                    currentQuiz = JSON.parse(saved);
+                } catch(e) {
+                    console.error("Error loading saved quiz", e);
+                }
+            }
+        }
+
+        function setThemeColor(color) {
+            currentQuiz.themeColor = color;
+            document.documentElement.style.setProperty('--theme-color', color);
+            const input = document.getElementById('edit-theme-color');
+            if (input) input.value = color;
+        }
+
+        function initGame() {
+            setThemeColor(currentQuiz.themeColor || "#f5c542");
+
+            document.getElementById('title-display').innerText = currentQuiz.title || "🔐 GIẢI MÃ MẬT MÃ";
+            document.getElementById('subtitle-display').innerText = currentQuiz.subtitle || "";
+            document.getElementById('question-count-badge').innerText = `${currentQuiz.questions.length} câu`;
+
+            gameState = {
+                answers: {},
+                foundCells: {},
+                completedBlocks: {},
+                submitted: false
+            };
+
+            currentQuiz.questions.forEach((q, idx) => {
+                gameState.foundCells[idx] = new Set();
+                gameState.completedBlocks[idx] = false;
+            });
+
+            if (currentQuiz.isStudentFile) {
+                const btnEditor = document.getElementById('btn-editor-toggle');
+                if (btnEditor) btnEditor.classList.add('hidden');
+            }
+
+            renderPasscodeTracker();
+            renderQuestions();
+            renderBlocks();
+            renderKaTeX();
+
+            document.getElementById('win-banner').classList.add('hidden');
+            document.getElementById('result-board').classList.add('hidden');
+        }
+
+        function renderKaTeX() {
+            if (window.katex) {
+                const elements = document.querySelectorAll('.katex-render');
+                elements.forEach(el => {
+                    const rawText = el.getAttribute('data-raw') || el.innerText;
+                    const parsed = rawText.replace(/\$([^\$]+)\$/g, (match, formula) => {
+                        try {
+                            return katex.renderToString(formula, { throwOnError: false });
+                        } catch (err) {
+                            return match;
+                        }
+                    });
+                    el.innerHTML = parsed;
+                });
+            }
+        }
+
+        function renderPasscodeTracker() {
+            const container = document.getElementById('passcode-tracker');
+            container.innerHTML = '';
+
+            currentQuiz.questions.forEach((q, idx) => {
+                const isDone = gameState.completedBlocks[idx];
+                const slot = document.createElement('div');
+                slot.className = `w-10 h-12 md:w-12 md:h-14 flex items-center justify-center font-black text-xl md:text-2xl rounded-xl border-2 transition-all ${
+                    isDone ? 'bg-theme border-slate-900 text-slate-900 shadow-md scale-105' : 'bg-slate-100 border-dashed border-slate-300 text-slate-300'
+                }`;
+                slot.innerText = isDone ? q.digit : '?';
+                container.appendChild(slot);
+            });
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+
+            currentQuiz.questions.forEach((q, qIdx) => {
+                const answered = gameState.answers[qIdx] !== undefined;
+                const isCorrect = gameState.answers[qIdx] === q.correct;
+                const borderAccentClass = `border-accent-${qIdx % 8}`;
+
+                const card = document.createElement('div');
+                card.className = `card-box bg-white rounded-xl p-4 shadow-sm border-t-4 ${borderAccentClass} border-x border-b border-slate-200 transition`;
+
+                let optionsHTML = '';
+                q.options.forEach((optText, optIdx) => {
+                    const letter = String.fromCharCode(65 + optIdx);
+                    let btnStyle = "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700";
+
+                    if (answered) {
+                        if (letter === gameState.answers[qIdx]) {
+                            btnStyle = isCorrect 
+                                ? "bg-emerald-600 text-white border-emerald-700 font-bold" 
+                                : "bg-rose-600 text-white border-rose-700 font-bold";
+                        } else if (letter === q.correct && gameState.answers[qIdx] !== q.correct) {
+                            btnStyle = "bg-emerald-100 border-emerald-300 text-emerald-800 font-semibold";
+                        } else {
+                            btnStyle = "bg-slate-50 border-slate-200 text-slate-400 opacity-60";
+                        }
+                    }
+
+                    optionsHTML += `
+                        <button onclick="selectAnswer(${qIdx}, '${letter}')" ${answered ? 'disabled' : ''} 
+                            class="w-full text-left p-2.5 rounded-lg border text-xs md:text-sm transition flex items-center gap-2 ${btnStyle}">
+                            <span class="katex-render" data-raw="${optText}">${optText}</span>
+                        </button>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-2 mb-2">
+                        <h3 class="font-bold text-xs md:text-sm text-slate-800">
+                            Câu ${qIdx + 1}: <span class="katex-render font-normal" data-raw="${q.question}">${q.question}</span>
+                        </h3>
+                        <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono font-semibold">
+                            ${q.weight || 1} đ
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                        ${optionsHTML}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function selectAnswer(qIdx, letter) {
+            if (gameState.answers[qIdx] !== undefined) return;
+
+            gameState.answers[qIdx] = letter;
+            const isCorrect = letter === currentQuiz.questions[qIdx].correct;
+
+            renderQuestions();
+            renderBlocks();
+            renderKaTeX();
+
+            if (isCorrect) {
+                const blockEl = document.getElementById(`block-wrapper-${qIdx}`);
+                if (blockEl) {
+                    blockEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        }
+
+        function renderBlocks() {
+            const container = document.getElementById('blocks-container');
+            container.innerHTML = '';
+
+            currentQuiz.questions.forEach((q, qIdx) => {
+                const isUnlocked = gameState.answers[qIdx] === q.correct;
+                const isCompleted = gameState.completedBlocks[qIdx];
+                const digit = q.digit;
+                const pattern = DIGIT_PATTERNS[digit] || DIGIT_PATTERNS[0];
+                const targetChar = (q.targetChar || q.correct || 'A').toUpperCase();
+
+                let totalTargetCells = 0;
+                pattern.forEach(row => row.forEach(val => { if (val === 1) totalTargetCells++; }));
+
+                const foundCount = gameState.foundCells[qIdx].size;
+
+                const wrapper = document.createElement('div');
+                wrapper.id = `block-wrapper-${qIdx}`;
+                wrapper.className = `bg-white rounded-xl p-3 shadow-sm border border-slate-200 flex flex-col justify-between ${
+                    isUnlocked ? 'block-unlocked border-emerald-400 ring-2 ring-emerald-100' : 'block-locked'
+                }`;
+
+                let headerText = `Khối ${qIdx + 1}: Bị khóa 🔒`;
+                if (isUnlocked) {
+                    headerText = `Tìm chữ ${targetChar}: ${foundCount}/${totalTargetCells}`;
+                }
+
+                let cellsHTML = '';
+                let randomCharPool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".replace(targetChar, "");
+
+                let cellIndexCounter = 0;
+                for (let r = 0; r < 7; r++) {
+                    for (let c = 0; c < 5; c++) {
+                        const cellId = cellIndexCounter++;
+                        const isTarget = pattern[r][c] === 1;
+
+                        let displayLetter = targetChar;
+                        if (!isTarget) {
+                            const pseudoRandomIdx = (qIdx * 35 + cellId * 7 + r * 3) % randomCharPool.length;
+                            displayLetter = randomCharPool[pseudoRandomIdx];
+                        }
+
+                        const isFound = gameState.foundCells[qIdx].has(cellId);
+                        const cellClass = isFound ? 'cell-found' : '';
+
+                        cellsHTML += `
+                            <div onclick="clickBlockCell(${qIdx}, ${cellId}, ${isTarget}, ${totalTargetCells})" 
+                                class="char-cell ${cellClass}" title="${isUnlocked ? 'Bấm để chọn' : 'Khóa'}">
+                                ${displayLetter}
+                            </div>
+                        `;
+                    }
+                }
+
+                wrapper.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-slate-700">${headerText}</span>
+                        ${isCompleted ? `<span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Hiện: ${digit}</span>` : ''}
+                    </div>
+                    <div class="char-grid mb-2">
+                        ${cellsHTML}
+                    </div>
+                    ${isCompleted ? `
+                        <div class="text-center font-black text-2xl text-slate-800 bg-amber-100 py-1 rounded border border-amber-300">
+                            Số Mật Mã: ${digit}
+                        </div>
+                    ` : ''}
+                `;
+
+                container.appendChild(wrapper);
+            });
+        }
+
+        function clickBlockCell(qIdx, cellId, isTarget, totalTargetCells) {
+            if (gameState.answers[qIdx] !== currentQuiz.questions[qIdx].correct) return;
+            if (gameState.completedBlocks[qIdx]) return;
+
+            if (isTarget) {
+                gameState.foundCells[qIdx].add(cellId);
+
+                if (gameState.foundCells[qIdx].size >= totalTargetCells) {
+                    gameState.completedBlocks[qIdx] = true;
+                    renderPasscodeTracker();
+                    checkAllBlocksCompleted();
+                }
+
+                renderBlocks();
+            }
+        }
+
+        function checkAllBlocksCompleted() {
+            const allDone = currentQuiz.questions.every((_, idx) => gameState.completedBlocks[idx] === true);
+            if (allDone) {
+                const fullPasscode = currentQuiz.questions.map(q => q.digit).join('');
+                let formattedCode = fullPasscode;
+                if (fullPasscode.length === 8) {
+                    formattedCode = `${fullPasscode.slice(0,2)} ${fullPasscode.slice(2,4)} ${fullPasscode.slice(4,8)}`;
+                }
+
+                document.getElementById('win-passcode-display').innerText = formattedCode;
+                const winBanner = document.getElementById('win-banner');
+                winBanner.classList.remove('hidden');
+                winBanner.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function submitQuiz() {
+            gameState.submitted = true;
+
+            let totalWeight = 0;
+            let earnedWeight = 0;
+            const wrongList = [];
+
+            currentQuiz.questions.forEach((q, idx) => {
+                const w = parseFloat(q.weight) || 1;
+                totalWeight += w;
+                const userAns = gameState.answers[idx];
+
+                if (userAns === q.correct) {
+                    earnedWeight += w;
+                } else {
+                    wrongList.push({
+                        num: idx + 1,
+                        question: q.question,
+                        userAns: userAns || "Chưa chọn",
+                        correctAns: q.correct,
+                        explanation: q.explanation || "Không có lời giải thích."
+                    });
+                }
+            });
+
+            const finalScore = totalWeight > 0 ? ((earnedWeight / totalWeight) * 10).toFixed(1) : "0.0";
+            
+            const studentName = document.getElementById('student-name').value || "Học sinh";
+            const studentClass = document.getElementById('student-class').value || "Chưa điền";
+            
+            document.getElementById('result-student-info').innerText = `Họ tên: ${studentName} | Lớp: ${studentClass}`;
+            document.getElementById('final-score').innerText = `${finalScore} / 10`;
+
+            const wrongContainer = document.getElementById('wrong-answers-list');
+            wrongContainer.innerHTML = '';
+
+            if (wrongList.length === 0) {
+                wrongContainer.innerHTML = `<div class="p-3 bg-emerald-50 text-emerald-800 rounded-lg text-sm font-semibold">🎉 Tuyện vời! Bạn trả lời đúng tất cả các câu hỏi!</div>`;
+            } else {
+                wrongList.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = "p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs md:text-sm space-y-1";
+                    div.innerHTML = `
+                        <div class="font-bold text-rose-900">Câu ${item.num}: <span class="katex-render" data-raw="${item.question}">${item.question}</span></div>
+                        <div class="text-rose-700">Đã chọn: <span class="font-bold">${item.userAns}</span> | Đáp án đúng: <span class="font-bold text-emerald-700">${item.correctAns}</span></div>
+                        <div class="text-slate-600 bg-white/70 p-2 rounded border border-rose-100 text-xs mt-1">
+                            💡 <strong>Giải thích:</strong> <span class="katex-render" data-raw="${item.explanation}">${item.explanation}</span>
+                        </div>
+                    `;
+                    wrongContainer.appendChild(div);
+                });
+            }
+
+            const resultBoard = document.getElementById('result-board');
+            resultBoard.classList.remove('hidden');
+            resultBoard.scrollIntoView({ behavior: 'smooth' });
+            renderKaTeX();
+        }
+
+        function resetQuizState() {
+            initGame();
+        }
+
+        function printA3Sheet() {
+            window.print();
+        }
+
+        function toggleTeacherPanel() {
+            const panel = document.getElementById('teacher-panel');
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) {
+                loadTeacherEditorData();
+            }
+        }
+
+        function loadTeacherEditorData() {
+            document.getElementById('edit-sheet-title').value = currentQuiz.title || "";
+            document.getElementById('edit-sheet-subtitle').value = currentQuiz.subtitle || "";
+            document.getElementById('edit-theme-color').value = currentQuiz.themeColor || "#f5c542";
+            renderTeacherQuestionEditors();
+        }
+
+        function renderTeacherQuestionEditors() {
+            const container = document.getElementById('editor-questions-list');
+            container.innerHTML = '';
+
+            currentQuiz.questions.forEach((q, idx) => {
+                const box = document.createElement('div');
+                box.className = "bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3";
+                box.innerHTML = `
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                        <span class="font-bold text-purple-300">Câu ${idx + 1}</span>
+                        <button onclick="removeQuestionEditor(${idx})" class="text-rose-400 hover:text-rose-300 text-xs font-bold">Xóa câu này</button>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Nội dung câu hỏi ($...$ cho công thức):</label>
+                        <textarea id="ed-q-${idx}" rows="2" class="w-full bg-slate-700 text-white p-2 rounded text-xs border border-slate-600">${q.question}</textarea>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] text-slate-400">Đáp án A:</label>
+                            <input type="text" id="ed-optA-${idx}" value="${q.options[0] || ''}" class="w-full bg-slate-700 text-white p-1.5 rounded text-xs border border-slate-600">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400">Đáp án B:</label>
+                            <input type="text" id="ed-optB-${idx}" value="${q.options[1] || ''}" class="w-full bg-slate-700 text-white p-1.5 rounded text-xs border border-slate-600">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400">Đáp án C:</label>
+                            <input type="text" id="ed-optC-${idx}" value="${q.options[2] || ''}" class="w-full bg-slate-700 text-white p-1.5 rounded text-xs border border-slate-600">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400">Đáp án D:</label>
+                            <input type="text" id="ed-optD-${idx}" value="${q.options[3] || ''}" class="w-full bg-slate-700 text-white p-1.5 rounded text-xs border border-slate-600">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 border-t border-slate-700 pt-2">
+                        <div>
+                            <label class="block text-[11px] text-amber-300 font-bold">Đáp án đúng:</label>
+                            <select id="ed-correct-${idx}" class="w-full bg-slate-700 text-white p-1.5 rounded text-xs border border-slate-600">
+                                <option value="A" ${q.correct === 'A' ? 'selected' : ''}>A</option>
+                                <option value="B" ${q.correct === 'B' ? 'selected' : ''}>B</option>
+                                <option value="C" ${q.correct === 'C' ? 'selected' : ''}>C</option>
+                                <option value="D" ${q.correct === 'D' ? 'selected' : ''}>D</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-amber-300 font-bold">Chữ giải mã (A-Z):</label>
+                            <input type="text" id="ed-targetChar-${idx}" maxLength="1" value="${q.targetChar || q.correct}" class="w-full bg-slate-700 text-white p-1.5 rounded text-xs border border-slate-600 uppercase text-center font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-amber-300 font-bold">Chữ số mật mã (0-9):</label>
+                            <input type="number" id="ed-digit-${idx}" min="0" max="9" value="${q.digit}" class="w-full bg-slate-700 text-white p-1.5 rounded text-xs border border-slate-600 text-center font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-amber-300 font-bold">Trọng số điểm:</label>
+                            <input type="number" step="0.1" id="ed-weight-${idx}" value="${q.weight || 1}" class="w-full bg-slate-700 text-white p-1.5 rounded text-xs border border-slate-600 text-center font-bold">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400">Lời giải thích ngắn:</label>
+                        <input type="text" id="ed-explanation-${idx}" value="${q.explanation || ''}" class="w-full bg-slate-700 text-white p-1.5 rounded text-xs border border-slate-600">
+                    </div>
+                `;
+                container.appendChild(box);
+            });
+        }
+
+        function addNewQuestionEditor() {
+            const newId = currentQuiz.questions.length + 1;
+            currentQuiz.questions.push({
+                id: newId,
+                question: `Câu hỏi mới số ${newId}?`,
+                options: ["A. Đáp án A", "B. Đáp án B", "C. Đáp án C", "D. Đáp án D"],
+                correct: "A",
+                targetChar: "A",
+                digit: (newId - 1) % 10,
+                weight: 1,
+                explanation: "Giải thích câu hỏi..."
+            });
+            renderTeacherQuestionEditors();
+        }
+
+        function removeQuestionEditor(idx) {
+            if (currentQuiz.questions.length <= 1) {
+                alert("Phiếu cần ít nhất 1 câu hỏi!");
+                return;
+            }
+            currentQuiz.questions.splice(idx, 1);
+            renderTeacherQuestionEditors();
+        }
+
+        function saveTeacherData() {
+            currentQuiz.title = document.getElementById('edit-sheet-title').value || "🔐 GIẢI MÃ MẬT MÃ";
+            currentQuiz.subtitle = document.getElementById('edit-sheet-subtitle').value || "";
+            currentQuiz.themeColor = document.getElementById('edit-theme-color').value || "#f5c542";
+
+            const updatedQuestions = [];
+            for (let i = 0; i < currentQuiz.questions.length; i++) {
+                const qText = document.getElementById(`ed-q-${i}`).value.trim();
+                const optA = document.getElementById(`ed-optA-${i}`).value.trim();
+                const optB = document.getElementById(`ed-optB-${i}`).value.trim();
+                const optC = document.getElementById(`ed-optC-${i}`).value.trim();
+                const optD = document.getElementById(`ed-optD-${i}`).value.trim();
+                const correct = document.getElementById(`ed-correct-${i}`).value;
+                const targetChar = (document.getElementById(`ed-targetChar-${i}`).value || correct).toUpperCase();
+                const digit = parseInt(document.getElementById(`ed-digit-${i}`).value) || 0;
+                const weight = parseFloat(document.getElementById(`ed-weight-${i}`).value) || 1;
+                const explanation = document.getElementById(`ed-explanation-${i}`).value.trim();
+
+                updatedQuestions.push({
+                    id: i + 1,
+                    question: qText,
+                    options: [optA, optB, optC, optD],
+                    correct: correct,
+                    targetChar: targetChar,
+                    digit: digit,
+                    weight: weight,
+                    explanation: explanation
+                });
+            }
+
+            currentQuiz.questions = updatedQuestions;
+            localStorage.setItem('giai_ma_mat_ma_quiz', JSON.stringify(currentQuiz));
+
+            alert("Đã lưu đề thành công!");
+            initGame();
+        }
+
+        function restoreDefaultData() {
+            localStorage.removeItem('giai_ma_mat_ma_quiz');
+            currentQuiz = JSON.parse(JSON.stringify(DEFAULT_QUIZ_DATA));
+            loadTeacherEditorData();
+            initGame();
+            alert("Đã khôi phục bộ đề mẫu!");
+        }
+
+        function handleDocxImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('docx-status');
+            statusEl.innerText = "Đang đọc file Word...";
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+                    .then(function(result) {
+                        const text = result.value;
+                        parseDocxText(text);
+                    })
+                    .catch(function(err) {
+                        console.error(err);
+                        statusEl.innerText = "Lỗi khi đọc file Word!";
+                    });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseDocxText(rawText) {
+            const statusEl = document.getElementById('docx-status');
+            const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+            
+            const parsedQuestions = [];
+            let currentQ = null;
+            let missingAnswerCount = 0;
+
+            lines.forEach(line => {
+                if (/^Câu\s+\d+[:.]/i.test(line)) {
+                    if (currentQ) {
+                        if (!currentQ.correct) missingAnswerCount++;
+                        parsedQuestions.push(currentQ);
+                    }
+                    currentQ = {
+                        question: line.replace(/^Câu\s+\d+[:.]/i, '').trim(),
+                        options: [],
+                        correct: 'A',
+                        targetChar: 'A',
+                        digit: (parsedQuestions.length) % 10,
+                        weight: 1,
+                        explanation: ''
+                    };
+                } else if (currentQ) {
+                    const optMatches = line.match(/[A-D]\.\s*[^A-D]+/g);
+                    if (optMatches && optMatches.length > 0) {
+                        optMatches.forEach(opt => {
+                            currentQ.options.push(opt.trim());
+                        });
+                    } else if (/^Đáp án:\s*([A-D])/i.test(line)) {
+                        const match = line.match(/^Đáp án:\s*([A-D])/i);
+                        if (match) {
+                            currentQ.correct = match[1].toUpperCase();
+                            currentQ.targetChar = currentQ.correct;
+                        }
+                    } else {
+                        if (currentQ.options.length === 0) {
+                            currentQ.question += " " + line;
+                        }
+                    }
+                }
+            });
+
+            if (currentQ) {
+                if (!currentQ.correct) missingAnswerCount++;
+                parsedQuestions.push(currentQ);
+            }
+
+            if (parsedQuestions.length > 0) {
+                parsedQuestions.forEach((q, idx) => {
+                    q.id = idx + 1;
+                    while (q.options.length < 4) {
+                        q.options.push(`${String.fromCharCode(65 + q.options.length)}. Lựa chọn...`);
+                    }
+                });
+
+                currentQuiz.questions = parsedQuestions;
+                renderTeacherQuestionEditors();
+                statusEl.innerText = `Đã nhập thành công ${parsedQuestions.length} câu! (${missingAnswerCount} câu thiếu dòng "Đáp án:", đã gán mặc định A). Nhớ bấm "Lưu đề" để cập nhật.`;
+            } else {
+                statusEl.innerText = "Không tìm thấy cấu trúc câu hỏi 'Câu X:' phù hợp trong file Word!";
+            }
+        }
+
+        function exportStudentHTML() {
+            const exportData = JSON.parse(JSON.stringify(currentQuiz));
+            exportData.isStudentFile = true;
+
+            const fullHtml = document.documentElement.outerHTML;
+            const injectedHtml = fullHtml.replace(
+                /const DEFAULT_QUIZ_DATA = \{[\s\S]*?\};/,
+                `const DEFAULT_QUIZ_DATA = ${JSON.stringify(exportData, null, 2)};`
+            );
+
+            const blob = new Blob([injectedHtml], { type: 'text/html;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Giai_Ma_Mat_Ma_Hoc_Sinh.html`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
